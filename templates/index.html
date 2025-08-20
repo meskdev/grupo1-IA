@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconhecimento de Caracteres EMNIST</title>
+        <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        h2 {
+            text-align: center;
+            color: #34495e;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .canvas-container {
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: white;
+            position: relative;
+        }
+        
+        #canvasDesenho {
+            display: block;
+            cursor: crosshair;
+        }
+        
+        .controles {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        #btnLimpar {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        #btnLimpar:hover {
+            background-color: #c0392b;
+        }
+        
+        #btnPrever {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        #btnPrever:hover {
+            background-color: #27ae60;
+        }
+        
+        .resultado {
+            margin-top: 6px;
+            padding: 6px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #previsao {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        #confianca {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .info-modelo {
+            margin-top: 9px;
+            padding: 9px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .info-modelo h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 3px;
+        }
+        
+        .info-modelo ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .info-modelo li {
+            padding: 4px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .info-modelo li:last-child {
+            border-bottom: none;
+        }
+        
+        .info-modelo strong {
+            color: #3498db;
+        }
+        
+        .carregando {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 4px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1><span style="color:rgb(9, 9, 102);">Cai<span style="color:rgb(155, 105, 11);">x</span>aVerso</span> - <span style="color:green;">Ada</span>Tech - Redes Neurais</h1>
+    <h2>Reconhecimento de Caracteres EMNIST</h2>
+    <h2>Desenhe um número ou letra para o modelo classificar</h2>
+    
+    <div class="container">
+        <div class="canvas-container">
+            <canvas id="canvasDesenho" width="295" height="295"></canvas>
+        </div>
+        
+        <div class="controles">
+            <button id="btnLimpar">Limpar</button>
+            <button id="btnPrever">Prever</button>
+        </div>
+        
+        <div class="resultado">
+            <div id="previsao">Desenhe um caractere e clique em "Prever"</div>
+            <div id="confianca"></div>
+            <div class="carregando" id="carregando"></div>
+        </div>
+        
+        <div class="info-modelo">
+            <h2>Configuração do Modelo</h2>
+            <ul>
+                <li><strong>Arquitetura:</strong> CNN com 3 camadas convolucionais</li>
+                <li><strong>Regularização:</strong> Dropout, Batch Normalization</li>
+                <li><strong>Otimizador:</strong> Adam</li>
+                <li><strong>Dataset:</strong> EMNIST ByClass (62 classes)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Elementos
+        const canvas = document.getElementById('canvasDesenho');
+        const ctx = canvas.getContext('2d');
+        const btnLimpar = document.getElementById('btnLimpar');
+        const btnPrever = document.getElementById('btnPrever');
+        const previsaoDiv = document.getElementById('previsao');
+        const confiancaDiv = document.getElementById('confianca');
+        const carregandoDiv = document.getElementById('carregando');
+        
+        // Configuração do desenho
+        let desenhando = false;
+        let ultimoX = 0;
+        let ultimoY = 0;
+        
+        ctx.lineWidth = 15;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000';
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Funções de desenho
+        function comecarDesenho(e) {
+            desenhando = true;
+            [ultimoX, ultimoY] = posicaoMouse(e);
+        }
+        
+        function desenhar(e) {
+            if (!desenhando) return;
+            const [x, y] = posicaoMouse(e);
+            ctx.beginPath();
+            ctx.moveTo(ultimoX, ultimoY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            [ultimoX, ultimoY] = [x, y];
+        }
+        
+        function posicaoMouse(e) {
+            const rect = canvas.getBoundingClientRect();
+            return [e.clientX - rect.left, e.clientY - rect.top];
+        }
+        
+        // Eventos
+        canvas.addEventListener('mousedown', comecarDesenho);
+        canvas.addEventListener('mousemove', desenhar);
+        canvas.addEventListener('mouseup', () => desenhando = false);
+        canvas.addEventListener('mouseout', () => desenhando = false);
+        
+        btnLimpar.addEventListener('click', () => {
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            previsaoDiv.textContent = 'Desenhe um caractere e clique em "Prever"';
+            confiancaDiv.textContent = '';
+        });
+        
+        btnPrever.addEventListener('click', async () => {
+            const imagem = canvas.toDataURL('image/png');
+            previsaoDiv.textContent = 'Processando...';
+            carregandoDiv.style.display = 'block';
+            
+            try {
+                const resposta = await fetch('/prever', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ imagem })
+                });
+                
+                const resultado = await resposta.json();
+                previsaoDiv.innerHTML = `Previsão: <strong>${resultado.previsao}</strong>`;
+                confiancaDiv.textContent = `Confiança: ${(resultado.confianca * 100).toFixed(2)}%`;
+            } catch (erro) {
+                previsaoDiv.textContent = 'Erro ao processar. Tente novamente.';
+            } finally {
+                carregandoDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
