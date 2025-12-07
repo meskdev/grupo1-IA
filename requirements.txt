@@ -1,10 +1,10 @@
-tensorflow-datasets==4.9.9
 streamlit==1.36.0
 tensorflow==2.12.0
 flask==2.3.2
 pillow==9.5.0
 numpy==1.23.5
 matplotlib==3.7.1
+tensorflow-datasets==4.9.9
 
 
 
