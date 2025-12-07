@@ -1,7 +1,7 @@
-matplotlib==3.7.1
 tensorflow-datasets
 streamlit==1.36.0
 tensorflow==2.20.0
 flask==2.3.3
 pillow==10.0.0
-numpy==1.26.0
+numpy==2.1.0  # Atualizado para compatibilidade
+matplotlib==3.9.0  # Atualizado para compatibilidade com numpy 2.x
