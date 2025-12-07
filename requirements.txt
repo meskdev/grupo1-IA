@@ -1,6 +1,7 @@
-tensorflow>=2.20.0
-flask==2.3.2
-pillow==9.5.0
-numpy==1.23.5
 matplotlib==3.7.1
 tensorflow-datasets
+streamlit==1.36.0
+tensorflow==2.20.0
+flask==2.3.3
+pillow==10.0.0
+numpy==1.26.0
