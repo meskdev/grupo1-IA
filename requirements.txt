@@ -1,8 +1,6 @@
-streamlit==1.36.0
-tensorflow==2.20.0
-flask==2.3.3
-pillow==10.4.0  # Use 10.4.0 ou 10.5.0
-numpy==2.1.0
-matplotlib==3.9.0
-tensorflow-datasets==4.9.9
-opencv-python-headless==4.10.1
+tensorflow==2.12.0
+flask==2.3.2
+pillow==9.5.0
+numpy==1.23.5
+matplotlib==3.7.1
+tensorflow-datasets
